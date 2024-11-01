@@ -11,11 +11,11 @@ class ChatBubble extends StatelessWidget {
   final bool isLast;
 
   const ChatBubble({
-    Key? key,
+    super.key,
     required this.text,
     this.isSender = false,
     this.isLast = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,13 +56,13 @@ class WaveBubble extends StatefulWidget {
   final Directory appDirectory;
 
   const WaveBubble({
-    Key? key,
+    super.key,
     required this.appDirectory,
     this.width,
     this.index,
     this.isSender = false,
     this.path,
-  }) : super(key: key);
+  });
 
   @override
   State<WaveBubble> createState() => _WaveBubbleState();
@@ -77,7 +77,8 @@ class _WaveBubbleState extends State<WaveBubble> {
   final playerWaveStyle = const PlayerWaveStyle(
     fixedWaveColor: Colors.white54,
     liveWaveColor: Colors.white,
-    spacing: 6,
+    spacing: 8,
+    showSeekLine: false,
   );
 
   @override
@@ -154,7 +155,7 @@ class _WaveBubbleState extends State<WaveBubble> {
                         controller.playerState.isPlaying
                             ? await controller.pausePlayer()
                             : await controller.startPlayer(
-                                finishMode: FinishMode.loop,
+                                finishMode: FinishMode.pause,
                               );
                       },
                       icon: Icon(

@@ -367,6 +367,10 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   void _updatePlayerPercent(Size size) {
     if (widget.playerController.maxDuration == 0) return;
     _audioProgress = _seekProgress.value / widget.playerController.maxDuration;
+
+    if (widget.waveformType.isLong) {
+      _pushBackWave();
+    }
   }
 
   ///This will handle pushing back the wave when it reaches to middle/end of the
@@ -375,13 +379,21 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   ///This will also handle refreshing the wave after scrolled
   void _pushBackWave() {
     if (!_isScrolled && widget.waveformType.isLong) {
+      final maxOffsetX =
+          (_waveformData.length * widget.playerWaveStyle.spacing) -
+              widget.size.width;
+
       _totalBackDistance = Offset(
-          (widget.playerWaveStyle.spacing *
-                  _audioProgress *
-                  _waveformData.length) +
-              widget.playerWaveStyle.spacing +
-              _dragOffset.dx,
-          0.0);
+        (_audioProgress * maxOffsetX).clamp(0.0, maxOffsetX) + _dragOffset.dx,
+        0.0,
+      );
+      // _totalBackDistance = Offset(
+      //     (widget.playerWaveStyle.spacing *
+      //             _audioProgress *
+      //             _waveformData.length) +
+      //         widget.playerWaveStyle.spacing +
+      //         _dragOffset.dx,
+      //     0.0);
     }
     if (widget.playerController.shouldClearLabels) {
       _initialDragPosition = 0.0;

@@ -100,10 +100,9 @@ class PlayerWavePainter extends CustomPainter {
     for (int i = 0; i < length; i++) {
       final currentDragPointer = dragOffset.dx - totalBackDistance.dx;
       final waveWidth = i * spacing;
-      final dx = waveWidth +
-          currentDragPointer +
-          emptySpace +
-          (waveformType.isFitWidth ? 0 : halfWidth);
+      final dx = waveWidth + currentDragPointer + emptySpace;
+      // +
+      // (waveformType.isFitWidth ? 0 : halfWidth);
       final waveHeight =
           (waveformData[i] * animValue) * scaleFactor * scrollScale;
       final bottomDy = halfHeight + (showBottom ? waveHeight : 0);
