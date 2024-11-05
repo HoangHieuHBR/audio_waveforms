@@ -111,11 +111,13 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   late PlayerWaveStyle? playerWaveStyle;
   late StreamSubscription<int> onCurrentDurationSubscription;
   late StreamSubscription<void> onCompletionSubscription;
+  late double dynamicSpacing;
   StreamSubscription<List<double>>? onCurrentExtractedWaveformData;
 
   @override
   void initState() {
     super.initState();
+    _calculateDynamicSpacing();
     _initialiseVariables();
     _growingWaveController = AnimationController(
       vsync: this,
@@ -192,6 +194,9 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
         onHorizontalDragUpdate:
             widget.enableSeekGesture ? _handleDragGestures : null,
         onTapUp: widget.enableSeekGesture ? _handleScrubberSeekStart : null,
+        onTapDown: widget.enableSeekGesture
+            ? (details) => _handlePlayheadPositionUpdate(details)
+            : null,
         onHorizontalDragStart:
             widget.enableSeekGesture ? _handleHorizontalDragStart : null,
         onHorizontalDragEnd:
@@ -206,7 +211,7 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
                   isComplex: true,
                   painter: PlayerWavePainter(
                     waveformData: _waveformData,
-                    spacing: widget.playerWaveStyle.spacing,
+                    spacing: dynamicSpacing,
                     waveColor: widget.playerWaveStyle.fixedWaveColor,
                     fixedWaveGradient: widget.playerWaveStyle.fixedWaveGradient,
                     scaleFactor: widget.playerWaveStyle.scaleFactor,
@@ -267,6 +272,7 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
     _waveformData
       ..clear()
       ..addAll(data);
+    _calculateDynamicSpacing();
     if (mounted) setState(() {});
   }
 
@@ -289,12 +295,19 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
     widget.playerController.seekTo(seekPosition.toInt());
   }
 
-  /// This method handles tap seek gesture
+  /// Below method handles tap seek gesture
   void _handleScrubberSeekStart(TapUpDetails details) {
     _proportion = details.localPosition.dx / widget.size.width;
     var seekPosition = widget.playerController.maxDuration * _proportion;
 
     widget.playerController.seekTo(seekPosition.toInt());
+  }
+
+  void _handlePlayheadPositionUpdate(TapDownDetails details) {
+    final maxDuration = widget.playerController.maxDuration;
+    if (maxDuration == 0) return;
+    _audioProgress = details.localPosition.dx / widget.size.width;
+    setState(() {});
   }
 
   ///This method handles horizontal scrolling of the wave
@@ -345,6 +358,17 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   ///This will help-out to determine direction of the scroll
   void _handleHorizontalDragStart(DragStartDetails details) =>
       _initialDragPosition = details.localPosition.dx;
+
+  /// Calculates dynamic spacing based on waveform type and container width
+  void _calculateDynamicSpacing() {
+    if (widget.waveformType == WaveformType.fitWidth) {
+      // Fit all waveform data within the container's width
+      dynamicSpacing = widget.size.width / _waveformData.length;
+    } else {
+      // Use the default spacing defined in playerWaveStyle for other waveform types
+      dynamicSpacing = widget.playerWaveStyle.spacing;
+    }
+  }
 
   /// This initialises variable in [initState] so that everytime current duration
   /// gets updated it doesn't re assign them to same values.
