@@ -111,13 +111,11 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   late PlayerWaveStyle? playerWaveStyle;
   late StreamSubscription<int> onCurrentDurationSubscription;
   late StreamSubscription<void> onCompletionSubscription;
-  late double dynamicSpacing;
   StreamSubscription<List<double>>? onCurrentExtractedWaveformData;
 
   @override
   void initState() {
     super.initState();
-    _calculateDynamicSpacing();
     _initialiseVariables();
     _growingWaveController = AnimationController(
       vsync: this,
@@ -211,7 +209,7 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
                   isComplex: true,
                   painter: PlayerWavePainter(
                     waveformData: _waveformData,
-                    spacing: dynamicSpacing,
+                    spacing: widget.playerWaveStyle.spacing,
                     waveColor: widget.playerWaveStyle.fixedWaveColor,
                     fixedWaveGradient: widget.playerWaveStyle.fixedWaveGradient,
                     scaleFactor: widget.playerWaveStyle.scaleFactor,
@@ -269,11 +267,23 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   }
 
   void _addWaveformData(List<double> data) {
+    //FIXME: RangeError (length): Invalid value: Valid value range is empty: 0
+
     _waveformData
       ..clear()
       ..addAll(data);
-    _calculateDynamicSpacing();
     if (mounted) setState(() {});
+
+    // _waveformData.clear();
+
+    // if (widget.waveformType == WaveformType.fitWidth) {
+    //   int segmentCount = (widget.size.width / 8).floor();
+    //   _waveformData.addAll(data.take(segmentCount));
+    // } else {
+    //   _waveformData.addAll(data);
+    // }
+
+    // if (mounted) setState(() {});
   }
 
   void _handleDragGestures(DragUpdateDetails details) {
@@ -358,17 +368,6 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   ///This will help-out to determine direction of the scroll
   void _handleHorizontalDragStart(DragStartDetails details) =>
       _initialDragPosition = details.localPosition.dx;
-
-  /// Calculates dynamic spacing based on waveform type and container width
-  void _calculateDynamicSpacing() {
-    if (widget.waveformType == WaveformType.fitWidth) {
-      // Fit all waveform data within the container's width
-      dynamicSpacing = widget.size.width / _waveformData.length;
-    } else {
-      // Use the default spacing defined in playerWaveStyle for other waveform types
-      dynamicSpacing = widget.playerWaveStyle.spacing;
-    }
-  }
 
   /// This initialises variable in [initState] so that everytime current duration
   /// gets updated it doesn't re assign them to same values.

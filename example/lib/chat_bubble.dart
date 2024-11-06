@@ -74,17 +74,18 @@ class _WaveBubbleState extends State<WaveBubble> {
   late PlayerController controller;
   late StreamSubscription<PlayerState> playerStateSubscription;
 
-  final playerWaveStyle = const PlayerWaveStyle(
-    fixedWaveColor: Colors.white54,
-    liveWaveColor: Colors.white,
-    spacing: 8,
-    showSeekLine: false,
-  );
+  late PlayerWaveStyle playerWaveStyle;
 
   @override
   void initState() {
     super.initState();
     controller = PlayerController();
+    playerWaveStyle = const PlayerWaveStyle(
+      fixedWaveColor: Colors.white54,
+      liveWaveColor: Colors.white,
+      showSeekLine: false,
+      spacing: 8.0,
+    );
     _preparePlayer();
     playerStateSubscription = controller.onPlayerStateChanged.listen((_) {
       setState(() {});
@@ -106,7 +107,7 @@ class _WaveBubbleState extends State<WaveBubble> {
     // Prepare player with extracting waveform if index is even.
     controller.preparePlayer(
       path: widget.path ?? file!.path,
-      shouldExtractWaveform: widget.index?.isEven ?? true,
+      // shouldExtractWaveform: widget.index?.isEven ?? true,
     );
     // Extracting waveform separately if index is odd.
     if (widget.index?.isOdd ?? false) {
@@ -127,6 +128,30 @@ class _WaveBubbleState extends State<WaveBubble> {
     super.dispose();
   }
 
+  Widget buildTimerText() {
+    return StreamBuilder(
+      initialData: 0,
+      stream: controller.onCurrentDurationChanged,
+      builder: (context, snapshot) {
+        final durationInSec = snapshot.data != null
+            ? (snapshot.data != 0
+                ? (snapshot.data! / 1000).round()
+                : (controller.maxDuration / 1000).round())
+            : (controller.maxDuration / 1000).round();
+
+        final int minutes = durationInSec ~/ 60;
+        final int seconds = durationInSec % 60;
+
+        return Text(
+          '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white,
+              ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return widget.path != null || file?.path != null
@@ -139,7 +164,7 @@ class _WaveBubbleState extends State<WaveBubble> {
                 right: widget.isSender ? 0 : 10,
                 top: 6,
               ),
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 color: widget.isSender
@@ -168,13 +193,15 @@ class _WaveBubbleState extends State<WaveBubble> {
                       highlightColor: Colors.transparent,
                     ),
                   AudioFileWaveforms(
-                    size: Size(MediaQuery.of(context).size.width / 2, 70),
+                    size: Size(MediaQuery.of(context).size.width * 0.5, 70),
                     playerController: controller,
                     waveformType: widget.index?.isOdd ?? false
                         ? WaveformType.fitWidth
                         : WaveformType.long,
                     playerWaveStyle: playerWaveStyle,
                   ),
+                  const SizedBox(width: 5),
+                  buildTimerText(),
                   if (widget.isSender) const SizedBox(width: 10),
                 ],
               ),

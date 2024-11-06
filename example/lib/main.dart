@@ -112,7 +112,7 @@ class _HomeState extends State<Home> {
                         return WaveBubble(
                           index: index + 1,
                           isSender: index.isOdd,
-                          width: MediaQuery.of(context).size.width / 2,
+                          width: MediaQuery.of(context).size.width * 0.7,
                           appDirectory: appDirectory,
                         );
                       },
