@@ -88,69 +88,82 @@ class PlayerWavePainter extends CustomPainter {
     );
   }
 
-  // void _drawWave(Size size, Canvas canvas) {
-  //   final length = waveformData.length;
-  //   final halfWidth = size.width * 0.5;
-  //   final halfHeight = size.height * 0.5;
-
-  //   if (cachedAudioProgress != audioProgress) {
-  //     pushBack();
-  //   }
-  //   for (int i = 0; i < length; i++) {
-  //     final currentDragPointer = dragOffset.dx - totalBackDistance.dx;
-  //     final waveWidth = i * spacing;
-  //     final dx = waveWidth + currentDragPointer + emptySpace;
-  //     // +
-  //     // (waveformType.isFitWidth ? 0 : halfWidth);
-  //     final waveHeight =
-  //         (waveformData[i] * animValue) * scaleFactor * scrollScale;
-  //     final bottomDy = halfHeight + (showBottom ? waveHeight : 0);
-  //     final topDy = halfHeight + (showTop ? -waveHeight : 0);
-
-  //     // Only draw waves which are in visible viewport.
-  //     if (dx > 0 && dx < halfWidth * 2) {
-  //       canvas.drawLine(
-  //         Offset(dx, bottomDy),
-  //         Offset(dx, topDy),
-  //         i < audioProgress * length ? liveWavePaint : fixedWavePaint,
-  //       );
-  //     }
-  //   }
-
-  // }
-
   void _drawWave(Size size, Canvas canvas) {
+    if (waveformData.isEmpty) return;
+
+    return waveformType.isLong
+        ? _drawWaveLong(size, canvas)
+        : _drawWaveFitWidth(size, canvas);
+  }
+
+  void _drawWaveLong(Size size, Canvas canvas) {
     final length = waveformData.length;
     final halfWidth = size.width * 0.5;
     final halfHeight = size.height * 0.5;
-    final segmentCount = (size.width / 10).toInt(); // Break into fixed segments
-    final segmentDuration =
-        length / segmentCount; // Time per segment
 
-    for (int i = 0; i < segmentCount; i++) {
-      // Position each segment along the X-axis based on its index
-      final dx = i * (size.width / segmentCount) +
-          dragOffset.dx -
-          totalBackDistance.dx;
+    if (cachedAudioProgress != audioProgress) {
+      pushBack();
+    }
+    for (int i = 0; i < length; i++) {
+      final currentDragPointer = dragOffset.dx - totalBackDistance.dx;
+      final waveWidth = i * spacing;
+      final dx = waveWidth + currentDragPointer + emptySpace;
+      // +
+      // (waveformType.isFitWidth ? 0 : halfWidth);
       final waveHeight =
-          (waveformData[(i * segmentDuration).toInt()] * animValue) *
-              scaleFactor *
-              scrollScale;
+          (waveformData[i] * animValue) * scaleFactor * scrollScale;
       final bottomDy = halfHeight + (showBottom ? waveHeight : 0);
       final topDy = halfHeight + (showTop ? -waveHeight : 0);
 
-      // Only draw waves within the visible viewport
-      if (dx > 0 && dx < size.width) {
-        // Paint the wave segment if its time threshold aligns with current audioProgress
-        Paint wavePaint = (audioProgress >= (i / segmentCount))
-            ? liveWavePaint
-            : fixedWavePaint;
-
+      // Only draw waves which are in visible viewport.
+      if (dx > 0 && dx < halfWidth * 2) {
         canvas.drawLine(
           Offset(dx, bottomDy),
           Offset(dx, topDy),
-          wavePaint,
+          i < audioProgress * length ? liveWavePaint : fixedWavePaint,
         );
+      }
+    }
+  }
+
+  void _drawWaveFitWidth(Size size, Canvas canvas) {
+    final length = waveformData.length;
+    final halfHeight = size.height * 0.5;
+    final segmentCount = (size.width / 8).toInt(); // Fixed segments
+    // final segmentDuration = 1 / segmentCount; // Duration per segment
+    final segmentWidth = size.width / segmentCount; // Width of each segment
+
+    if (cachedAudioProgress != audioProgress) {
+      pushBack();
+    }
+
+    for (int i = 0; i < segmentCount; i++) {
+      // Position each segment along the X-axis
+      final dx = i * segmentWidth +
+          dragOffset.dx -
+          totalBackDistance.dx +
+          (i == 0 ? segmentWidth / 6 : 0);
+
+      final dataIndex = (i * length) ~/ segmentCount;
+      if (dataIndex < length) {
+        final waveHeight =
+            (waveformData[dataIndex] * animValue) * scaleFactor * scrollScale;
+
+        final bottomDy = halfHeight + (showBottom ? waveHeight : 0);
+        final topDy = halfHeight + (showTop ? -waveHeight : 0);
+
+        // Determine paint style based on audio progress
+        Paint wavePaint =
+            i < audioProgress * length ? liveWavePaint : fixedWavePaint;
+
+        // Only draw waves within the visible viewport
+        if (dx >= 0 && dx < size.width) {
+          canvas.drawLine(
+            Offset(dx, bottomDy),
+            Offset(dx, topDy),
+            wavePaint,
+          );
+        }
       }
     }
   }

@@ -179,7 +179,7 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   double scrollScale = 1.0;
   double _proportion = 0.0;
 
-  final List<double> _waveformData = [];
+  final List<double> _waveformData = [0.0];
 
   @override
   Widget build(BuildContext context) {
@@ -267,23 +267,22 @@ class _AudioFileWaveformsState extends State<AudioFileWaveforms>
   }
 
   void _addWaveformData(List<double> data) {
-    //FIXME: RangeError (length): Invalid value: Valid value range is empty: 0
-
-    _waveformData
-      ..clear()
-      ..addAll(data);
-    if (mounted) setState(() {});
-
-    // _waveformData.clear();
-
-    // if (widget.waveformType == WaveformType.fitWidth) {
-    //   int segmentCount = (widget.size.width / 8).floor();
-    //   _waveformData.addAll(data.take(segmentCount));
-    // } else {
-    //   _waveformData.addAll(data);
-    // }
-
+    // _waveformData
+    //   ..clear()
+    //   ..addAll(data);
     // if (mounted) setState(() {});
+
+    _waveformData.clear();
+
+    // Add data with segment limit for fitWidth type
+    if (widget.waveformType == WaveformType.fitWidth) {
+      int segmentCount = (widget.size.width / 8).floor();
+      _waveformData.addAll(data.take(segmentCount));
+    } else {
+      _waveformData.addAll(data);
+    }
+
+    if (mounted) setState(() {});
   }
 
   void _handleDragGestures(DragUpdateDetails details) {
