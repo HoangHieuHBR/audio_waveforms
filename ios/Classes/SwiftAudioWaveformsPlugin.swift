@@ -51,7 +51,8 @@ public class SwiftAudioWaveformsPlugin: NSObject, FlutterPlugin {
                 audioPlayers[key!]?.preparePlayer(path: args?[Constants.path] as? String,
                                                   volume: args?[Constants.volume] as? Double,
                                                   updateFrequency: args?[Constants.updateFrequency] as? Int,
-                                                  result: result)
+                                                  result: result, overrideAudioSession: (args?[Constants.overrideAudioSession] as? Bool) ?? false )
+                
             } else {
                 result(FlutterError(code: Constants.audioWaveforms, message: "Can not prepare player", details: "Player key is null"))
             }
